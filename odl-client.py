@@ -11,7 +11,6 @@ from odl.topology import ODLTopology
 from docopt import docopt
 import re
 import cmd
-import zmq
 import json
 import shlex
 import pprint
