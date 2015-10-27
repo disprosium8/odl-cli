@@ -8,10 +8,12 @@ import sys
 sys.path.append('python-odl-0.0.1')
 from odl.instance import ODLInstance
 from odl.topology import ODLTopology
+from odl.node import ODLNode
 from docopt import docopt
 import re
 import cmd
 import json
+import uuid
 import shlex
 import pprint
 
@@ -34,6 +36,30 @@ class col:
     FAIL = '\033[31m' # RED
     ENDC = '\033[39m' # BLACK
 
+class Util():
+    def get_string(self, disp_str, dval):
+        val = raw_input(disp_str)
+        if len(str(val)):
+            return str(val)
+        else:
+            return dval
+
+    def get_int(self, disp_str, dval):
+        val = raw_input(disp_str)
+        try:
+            rval = int(val)
+            return rval
+        except:
+            return dval
+
+    def get_real(self, disp_str, dval):
+        val = raw_input(disp_str)
+        try:
+            rval = float(val)
+            return rval
+        except:
+            return dval
+    
 class ODLCmd(cmd.Cmd):
     def __init__(self, url, user, pw):
         self.prompt = col.PROMPT + "odl-client> " + col.ENDC
@@ -41,11 +67,10 @@ class ODLCmd(cmd.Cmd):
         self.cwc = self.config
         self.cwd_list = []
         self.odl = ODLInstance(url, (user, pw))
+        self.util = Util()
+        self.node = None
         self.pp = pprint.PrettyPrinter(indent=1, width=80, depth=None, stream=None)
         cmd.Cmd.__init__(self)
-
-    def default(self):
-        pass
 
     def emptyline(self):
         pass
@@ -133,8 +158,35 @@ class ODLCmd(cmd.Cmd):
 
     def do_add_flow(self, args):
         '''Add a flow, will prompt for user input'''
-        pass
+        if not self.node:
+            print col.FAIL + "No ODL node selected!" + col.ENDC
+            return
 
+        fid = self.util.get_int("Flow ID: ", str(uuid.uuid4()))
+        table = self.util.get_int("Table: ", None)
+        priority = self.util.get_int("Priority: ", 500)
+        flags = self.util.get_string("Flags: ", 500)
+        vlan = self.util.get_int("vlan: ", None)
+        inp = self.util.get_string("in-port: ", None)
+        outp = self.util.get_string("out-port: ", None)
+
+        flow = {"id": fid,
+                "table_id": table,
+                "priority": priority,
+                "flags": flags,
+                "instructions": {"instruction": [{"apply-actions": {"action": [{
+                    "order": 0,
+                    "output-action": {
+                        "max-length": 0,
+                        "output-node-connector": outp,
+                    }
+                }]
+                }}]},
+                "match": {"in-port": inp},
+            }
+        self.pp.pprint(flow)
+        
+        
     def do_EOF(self, line):
         return True
 
@@ -198,7 +250,10 @@ class ODLCmd(cmd.Cmd):
 
     def _odl_to_dict(self, cfg, k):
         if k and hasattr(cfg, "to_dict"):
+            if isinstance(cfg, ODLNode):
+                self.node = cfg
             cfg = cfg.to_dict()[k]
+
         if isinstance(cfg, list):
             new = {}
             for d in cfg:
