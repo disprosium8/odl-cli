@@ -44,6 +44,12 @@ class ODLCmd(cmd.Cmd):
         self.pp = pprint.PrettyPrinter(indent=1, width=80, depth=None, stream=None)
         cmd.Cmd.__init__(self)
 
+    def default(self):
+        pass
+
+    def emptyline(self):
+        pass
+        
     def do_cd(self, path):
         '''Change the current level of view of the config to be at <key>
         cd <key>'''
@@ -60,7 +66,7 @@ class ODLCmd(cmd.Cmd):
         self.cwc = cwc
 
     def complete_cd(self, text, l, b, e):
-        return [ x[b-3:] for x,y in self.cwc.iteritems() if x.startswith(l[3:]) ]
+        return [ x[b-3:] for x,y in self.cwc.iteritems() if x.startswith(l[3:])]
 
     def do_ls(self, key):
         '''Show the top level of the current working config, or top level of config under [key]
@@ -73,11 +79,14 @@ class ODLCmd(cmd.Cmd):
                 print "No such key %s" % key
                 return
 
-        for k,v in conf.iteritems():
-            if isinstance(v, dict) or isinstance(v, list):
-                print col.DIR + k + col.ENDC
-            else:
-                print "%s: %s" % (k, v)
+        try:
+            for k,v in conf.iteritems():
+                if isinstance(v, dict) or isinstance(v, list):
+                    print col.DIR + k + col.ENDC
+                else:
+                    print "%s: %s" % (k, v)
+        except:
+            print "%s" % conf
 
     def complete_ls(self, text, l, b, e):
         return [ x[b-3:] for x,y in self.cwc.iteritems() if x.startswith(l[3:]) ]
@@ -200,9 +209,6 @@ class ODLCmd(cmd.Cmd):
                         new[str(k)] = v
             cfg = new
         return cfg
-
-def main():
-    ODLCmd().cmdloop()
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='odl-client 0.1')
