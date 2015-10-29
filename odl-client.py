@@ -106,7 +106,10 @@ class ODLCmd(cmd.Cmd):
 
         try:
             for k,v in conf.iteritems():
-                if isinstance(v, dict) or isinstance(v, list):
+                if isinstance(v, ODLNode):
+                    print col.DIR + k + col.ENDC + ": (\"%s\", \"%s\", \"%s\")" % \
+                    (v.ip_address, v.description, v.manufacturer)
+                elif isinstance(v, dict) or isinstance(v, list):
                     print col.DIR + k + col.ENDC
                 else:
                     print "%s: %s" % (k, v)
