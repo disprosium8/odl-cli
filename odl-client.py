@@ -2,7 +2,7 @@
 
 '''
 Usage:
-odl-client <URL> <user> <password>
+odl-client [<url> <user> <password>]
 '''
 import sys
 sys.path.append('python-odl-0.0.1')
@@ -270,7 +270,7 @@ class ODLCmd(cmd.Cmd):
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='odl-client 0.1')
-    url = args.get("<URL>")
+    url = args.get("<url>")
     if not url:
         url = "http://odl.scinet.ncsa.edu:8181"
 
