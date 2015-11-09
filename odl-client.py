@@ -2,7 +2,7 @@
 
 '''
 Usage:
-odl-client [URL user password]
+odl-client <URL> <user> <password>
 '''
 import sys
 sys.path.append('python-odl-0.0.1')
@@ -270,22 +270,22 @@ class ODLCmd(cmd.Cmd):
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='odl-client 0.1')
-    url = args.get("URL")
+    url = args.get("<URL>")
     if not url:
         url = "http://odl.scinet.ncsa.edu:8181"
 
-    user = args.get("user")
+    user = args.get("<user>")
     if not user:
         user = "admin"
 
-    pw = args.get("password")
+    pw = args.get("<password>")
     if not pw:
         pw = "admin"
 
     info =\
 """Server: %s
 User  : %s
-Passwd: %s\n""" % (url, user, pw)
+Passwd: %s\n""" % (url, user, "*****" if pw != "admin" else pw)
     print info
     
     odlc = ODLCmd(url, user, pw)
