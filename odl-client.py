@@ -16,6 +16,7 @@ import json
 import uuid
 import shlex
 import pprint
+import socket
 
 class ConfigurationError(Exception):
     def __init__(self, num, key, dir_list):
@@ -107,8 +108,12 @@ class ODLCmd(cmd.Cmd):
         try:
             for k,v in conf.iteritems():
                 if isinstance(v, ODLNode):
+                    try:
+                        hostname = socket.gethostbyaddr(v.ip_address)[0]
+                    except:
+                        hostname = v.ip_address
                     print col.DIR + k + col.ENDC + ": (\"%s\", \"%s\", \"%s\")" % \
-                    (v.ip_address, v.description, v.manufacturer)
+                    (hostname, v.description, v.manufacturer)
                 elif isinstance(v, dict) or isinstance(v, list):
                     print col.DIR + k + col.ENDC
                 else:
@@ -165,30 +170,45 @@ class ODLCmd(cmd.Cmd):
             print col.FAIL + "No ODL node selected!" + col.ENDC
             return
 
-        fid = self.util.get_int("Flow ID: ", str(uuid.uuid4()))
+        fid = self.util.get_str("Flow ID: ", str(uuid.uuid4()))
         table = self.util.get_int("Table: ", None)
-        priority = self.util.get_int("Priority: ", 500)
-        flags = self.util.get_string("Flags: ", 500)
+        eth_type = self.util.get_int("Eth type: ", None)
         vlan = self.util.get_int("vlan: ", None)
         inp = self.util.get_string("in-port: ", None)
         outp = self.util.get_string("out-port: ", None)
 
-        flow = {"id": fid,
-                "table_id": table,
-                "priority": priority,
-                "flags": flags,
-                "instructions": {"instruction": [{"apply-actions": {"action": [{
-                    "order": 0,
-                    "output-action": {
-                        "max-length": 0,
-                        "output-node-connector": outp,
-                    }
-                }]
-                }}]},
-                "match": {"in-port": inp},
-            }
+        flow = {
+            'cookie': 0,
+            'id': fid,
+            'idle-timeout': 0,
+            'instructions': {
+                'instruction': [{
+                    'apply-actions': {
+                        'action': [{
+                            'order': 1,
+                            'push-vlan-action': {
+                                'ethernet-type': eth_type}},
+                                   {
+                                       'order': 2,
+                                       'set-field': {
+                                           'vlan-match': {
+                                               'vlan-id': {'vlan-id': vlan,
+                                                           'vlan-id-present': True}}}},
+                                   {'order': 0,
+                                    'output-action': {'max-length': 0,
+                                                      'output-node-connector': outp}}]},
+                    'order': 0}]},
+            'match': {'ethernet-match': {'ethernet-type': {'type': 33024}},
+                      'vlan-match': {'vlan-id': {'vlan-id': vlan,
+                                                 'vlan-id-present': True}}},
+            'priority': 500,
+            'table_id': 0
+        }
         self.pp.pprint(flow)
-        
+        try:
+            self.odl.put_flow(flow, self.node.id, table, fid)
+        except Exception, e:
+            print "Error pushing flow: %s" % e
         
     def do_EOF(self, line):
         return True
