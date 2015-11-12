@@ -164,8 +164,8 @@ class ODLInstance(object):
             if connector and connector.id == id:
                 return connector
         return None
-
+    
     def put_flow(self, data, node,  table, id):
-        endpoint = "/restconf/operational/opendaylight-inventory:nodes/%s/table/%s/flow/%s" % \
+        endpoint = "/restconf/config/opendaylight-inventory:nodes/%s/table/%s/flow/%s" % \
                    (node, table, id)
-        self.put(endpoint, data)
+        self.put(endpoint, data, content = 'application/yang.data+json')
