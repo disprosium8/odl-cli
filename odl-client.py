@@ -170,7 +170,7 @@ class ODLCmd(cmd.Cmd):
             print col.FAIL + "No ODL node selected!" + col.ENDC
             return
 
-        fid = self.util.get_str("Flow ID: ", str(uuid.uuid4()))
+        fid = self.util.get_string("Flow ID: ", str(uuid.uuid4()))
         table = self.util.get_int("Table: ", None)
         eth_type = self.util.get_int("Eth type: ", None)
         vlan = self.util.get_int("vlan: ", None)
@@ -178,31 +178,33 @@ class ODLCmd(cmd.Cmd):
         outp = self.util.get_string("out-port: ", None)
 
         flow = {
-            'cookie': 0,
-            'id': fid,
-            'idle-timeout': 0,
-            'instructions': {
-                'instruction': [{
-                    'apply-actions': {
-                        'action': [{
-                            'order': 1,
-                            'push-vlan-action': {
-                                'ethernet-type': eth_type}},
-                                   {
-                                       'order': 2,
-                                       'set-field': {
-                                           'vlan-match': {
-                                               'vlan-id': {'vlan-id': vlan,
-                                                           'vlan-id-present': True}}}},
-                                   {'order': 0,
-                                    'output-action': {'max-length': 0,
-                                                      'output-node-connector': outp}}]},
-                    'order': 0}]},
-            'match': {'ethernet-match': {'ethernet-type': {'type': 33024}},
-                      'vlan-match': {'vlan-id': {'vlan-id': vlan,
-                                                 'vlan-id-present': True}}},
-            'priority': 500,
-            'table_id': 0
+            'flow': {
+                'cookie': 0,
+                'id': fid,
+                'idle-timeout': 0,
+                'instructions': {
+                    'instruction': [{
+                        'apply-actions': {
+                            'action': [{
+                                'order': 1,
+                                'push-vlan-action': {
+                                    'ethernet-type': eth_type}},
+                                       {
+                                           'order': 2,
+                                           'set-field': {
+                                               'vlan-match': {
+                                                   'vlan-id': {'vlan-id': vlan,
+                                                               'vlan-id-present': True}}}},
+                                       {'order': 0,
+                                        'output-action': {'max-length': 0,
+                                                          'output-node-connector': outp}}]},
+                        'order': 0}]},
+                'match': {'ethernet-match': {'ethernet-type': {'type': 33024}},
+                          'vlan-match': {'vlan-id': {'vlan-id': vlan,
+                                                     'vlan-id-present': True}}},
+                'priority': 500,
+                'table_id': 0
+            }
         }
         self.pp.pprint(flow)
         try:
