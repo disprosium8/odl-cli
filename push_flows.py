@@ -44,12 +44,12 @@ Passwd: %s\n""" % (ffile, url, user, "*****" if pw != "admin" else pw)
 
     odl = ODLInstance(url, (user, pw))
     for flow in flows:
-        try:
-            print "Pushing flow entry to switch %s for connection %s" % \
-                (flow['sw_desc'], flow['id'])
-            #self.odl.put_flow(flow, self.node.id, table, fid)
-        except Exception, e:
-            print "Error pushing flow: %s" % e
-
+        print "Pushing flow entry to switch %s for connection %s" % \
+            (flow['sw_desc'], flow['id'])
+        odl.put_flow({"flow": flow['flow']},
+                     flow['switch'],
+                     flow['flow']['table_id'],
+                     flow['id'])
+        
     f.close()
     

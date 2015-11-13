@@ -127,7 +127,6 @@ class ODLInstance(object):
                                 data = data,
                                 auth = self.credentials,
                                 content = content)
-        return json.loads(response.text)
 
     def delete(self, endpoint):
         """
@@ -168,4 +167,9 @@ class ODLInstance(object):
     def put_flow(self, data, node, table, id):
         endpoint = "/restconf/config/opendaylight-inventory:nodes/node/%s/table/%s/flow/%s" % \
                    (node, table, id)
-        self.put(endpoint, data, content = 'application/yang.data+json')
+        self.put(endpoint, json.dumps(data), content = 'application/yang.data+json')
+
+    def delete_flow(self, node, table, id):
+        endpoint = "/restconf/config/opendaylight-inventory:nodes/node/%s/table/%s/flow/%s" % \
+                   (node, table, id)
+        self.delete(endpoint)

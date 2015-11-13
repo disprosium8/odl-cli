@@ -164,6 +164,10 @@ class ODLCmd(cmd.Cmd):
         except Exception as e:
             print "Error: %s" % e
 
+    def do_del_flow(self, args):
+        #if not self.cwd_list[:-3] == "tables":
+            
+            
     def do_add_flow(self, args):
         '''Add a flow, will prompt for user input'''
         if not self.node:
@@ -179,9 +183,11 @@ class ODLCmd(cmd.Cmd):
 
         flow = {
             'flow': {
+                'barrier': False,
                 'cookie': 0,
                 'id': fid,
                 'idle-timeout': 0,
+                'hard-timeout': 0,
                 'instructions': {
                     'instruction': [{
                         'apply-actions': {
