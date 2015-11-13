@@ -31,6 +31,7 @@ from odl import log
 import json
 import sys
 import requests
+from urllib import quote
 
 
 class ODLInstance(object):
@@ -100,7 +101,7 @@ class ODLInstance(object):
             raise NotImplemented("Method %s not implemented." % method)
 
         if response.status_code == 404:
-            raise ODL404("Endpoint not found: %s" % self.server + endpoint)
+            raise ODL404("Endpoint not found: %s" % endpoint)
 
         # Consider any status other than 2xx an error
         if not response.status_code // 100 == 2:
@@ -166,10 +167,10 @@ class ODLInstance(object):
     
     def put_flow(self, data, node, table, id):
         endpoint = "/restconf/config/opendaylight-inventory:nodes/node/%s/table/%s/flow/%s" % \
-                   (node, table, id)
+                   (node, table, quote(id))
         self.put(endpoint, json.dumps(data), content = 'application/yang.data+json')
 
     def delete_flow(self, node, table, id):
         endpoint = "/restconf/config/opendaylight-inventory:nodes/node/%s/table/%s/flow/%s" % \
-                   (node, table, id)
+                   (node, table, quote(id))
         self.delete(endpoint)

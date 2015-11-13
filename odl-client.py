@@ -60,6 +60,37 @@ class Util():
             return rval
         except:
             return dval
+
+    def query_yes_no(self, question, default="no"):
+        """Ask a yes/no question via raw_input() and return their answer.
+        "question" is a string that is presented to the user.
+        "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+        
+        The "answer" return value is one of "yes" or "no".
+        """
+        valid = {"yes":True,   "y":True,  "ye":True,
+                 "no":False,     "n":False}
+        if default == None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+            
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = raw_input().lower()
+            if default is not None and choice == '':
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' "\
+                                 "(or 'y' or 'n').\n")
     
 class ODLCmd(cmd.Cmd):
     def __init__(self, url, user, pw):
@@ -164,9 +195,44 @@ class ODLCmd(cmd.Cmd):
         except Exception as e:
             print "Error: %s" % e
 
-    def do_del_flow(self, args):
-        #if not self.cwd_list[:-3] == "tables":
-            
+    def do_del_flow(self, fid):
+        try:
+            if not self.cwd_list[-3] == "tables":
+                raise
+        except:
+            print col.FAIL + "Not in a valid table leaf!" + col.ENDC
+            return
+
+        if not fid:
+            print col.FAIL + "Must specify flow id or '*'" + col.ENDC
+            return
+
+        table = self.cwd_list[-2]
+        if fid == "*":
+            yn = self.util.query_yes_no("Delete ALL flows in table %s" % (table))
+            if yn:
+                for x, y in self.cwc.iteritems():
+                    print "removing flow %s" % x
+                    try:
+                        self.odl.delete_flow(self.node.id, table, x)
+                    except Exception as e:
+                        print "Error deleting flow: %s" % e
+                    self.do_get_nodes(None)
+            else:
+                return
+        else:
+            yn = self.util.query_yes_no("Delete flow %s in table %s" % (fid, table))
+            if yn:
+                try:
+                    self.odl.delete_flow(self.node.id, table, fid)
+                except Exception as e:
+                    print "Error deleting flow: %s" % e
+                self.do_get_nodes(None)
+            else:
+                return
+
+    def complete_del_flow(self, text, l, b, e):
+        return [ x[b-9:] for x,y in self.cwc.iteritems() if x.startswith(l[9:]) ]
             
     def do_add_flow(self, args):
         '''Add a flow, will prompt for user input'''
@@ -190,23 +256,9 @@ class ODLCmd(cmd.Cmd):
                 'hard-timeout': 0,
                 'instructions': {
                     'instruction': [{
-                        'apply-actions': {
-                            'action': [{
-                                'order': 1,
-                                'push-vlan-action': {
-                                    'ethernet-type': eth_type}},
-                                       {
-                                           'order': 2,
-                                           'set-field': {
-                                               'vlan-match': {
-                                                   'vlan-id': {'vlan-id': vlan,
-                                                               'vlan-id-present': True}}}},
-                                       {'order': 0,
-                                        'output-action': {'max-length': 0,
-                                                          'output-node-connector': outp}}]},
+                        'apply-actions': {},
                         'order': 0}]},
-                'match': {'ethernet-match': {'ethernet-type': {'type': 33024}},
-                          'vlan-match': {'vlan-id': {'vlan-id': vlan,
+                'match': {'vlan-match': {'vlan-id': {'vlan-id': vlan,
                                                      'vlan-id-present': True}}},
                 'priority': 500,
                 'table_id': 0
@@ -217,6 +269,7 @@ class ODLCmd(cmd.Cmd):
             self.odl.put_flow(flow, self.node.id, table, fid)
         except Exception, e:
             print "Error pushing flow: %s" % e
+        self.do_get_nodes(None)
         
     def do_EOF(self, line):
         return True
