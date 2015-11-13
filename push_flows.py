@@ -34,14 +34,14 @@ Server: %s
 User  : %s
 Passwd: %s\n""" % (ffile, url, user, "*****" if pw != "admin" else pw)
     print info
-
+    
     try:
         f = open(ffile, 'r')
         fstr = f.read()
         flows = json.loads(fstr)
     except Exception, e:
         print "Error: %s" % e
-
+        
     odl = ODLInstance(url, (user, pw))
     for flow in flows:
         print "Pushing flow entry to switch %s for connection %s" % \

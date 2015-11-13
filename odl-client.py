@@ -240,35 +240,48 @@ class ODLCmd(cmd.Cmd):
             print col.FAIL + "No ODL node selected!" + col.ENDC
             return
 
-        fid = self.util.get_string("Flow ID: ", str(uuid.uuid4()))
-        table = self.util.get_int("Table: ", None)
-        eth_type = self.util.get_int("Eth type: ", None)
-        vlan = self.util.get_int("vlan: ", None)
-        inp = self.util.get_string("in-port: ", None)
-        outp = self.util.get_string("out-port: ", None)
 
-        flow = {
-            'flow': {
-                'barrier': False,
-                'cookie': 0,
-                'id': fid,
-                'idle-timeout': 0,
-                'hard-timeout': 0,
-                'instructions': {
-                    'instruction': [{
-                        'apply-actions': {},
-                        'order': 0}]},
-                'match': {'vlan-match': {'vlan-id': {'vlan-id': vlan,
-                                                     'vlan-id-present': True}}},
-                'priority': 500,
-                'table_id': 0
-            }
-        }
-        self.pp.pprint(flow)
+        file_path = self.util.get_string("File: ", None)
+        if not file_path:
+            print "You must include a json file containing the odl request"
+            return
+        
         try:
-            self.odl.put_flow(flow, self.node.id, table, fid)
-        except Exception, e:
-            print "Error pushing flow: %s" % e
+            with open(file_path, 'r') as in_file:
+                raw_json = in_file.read()
+                
+            flow_requests = json.loads(raw_json)
+        except IOError, e:
+            print "Could not open file %s" % file_path
+            return
+        except ValueError, e:
+            print "Invalid json formatting in request"
+            return
+
+        if isinstance(flow_requests, list):
+            for request in flow_requests:
+                self.pp.pprint(request)
+                try:
+                    flow_id  = request["flow"]["id"]
+                    table_id = request["flow"]["table_id"]
+                    self.odl.put_flow(request, self.node.id, table_id, flow_id)
+                except ValueError, e:
+                    print "Flow request did not contain flow or table id"
+                    return
+                except Exception, e:
+                    print "Error pushing flow: %s" % e
+        else:
+            request = flow_requests
+            try:
+                flow_id  = request["flow"]["id"]
+                table_id = request["flow"]["table_id"]
+                self.odl.put_flow(request, self.node.id, table_id, flow_id)
+            except ValueError, e:
+                print "Flow request did not contain flow or table id"
+                return
+            except Exception, e:
+                print "Error pushing flow: %s" % e
+                
         self.do_get_nodes(None)
         
     def do_EOF(self, line):
