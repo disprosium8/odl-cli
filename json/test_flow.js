@@ -29,6 +29,7 @@
 		       "ethernet-type": {
 			   "type": 2054}}},
          "priority": 2000,
+	 "strict": true,
          "table_id": 0
      }
  },
@@ -92,6 +93,7 @@
                  "order": 0}]},
 	 "match": {"in-port": "openflow:6961614077932077056:1"},
          "priority": 1000,
+	 "strict": true,
          "table_id": 0
      }
  },
