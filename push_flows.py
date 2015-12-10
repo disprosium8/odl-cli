@@ -4,8 +4,7 @@
 Usage:
 push_flows [<flow_file> <url> <user> <password>]
 '''
-import sys
-sys.path.append('python-odl-0.0.1')
+
 from odl.instance import ODLInstance
 from odl.topology import ODLTopology
 from odl.node import ODLNode
@@ -43,13 +42,11 @@ Passwd: %s\n""" % (ffile, url, user, "*****" if pw != "admin" else pw)
         print "Error: %s" % e
         
     odl = ODLInstance(url, (user, pw))
+    nodes = odl.get_nodes()
     for flow in flows:
-        print "Pushing flow entry to switch %s for connection %s" % \
-            (flow['sw_desc'], flow['id'])
-        odl.put_flow({"flow": flow['flow']},
-                     flow['switch'],
-                     flow['flow']['table_id'],
-                     flow['id'])
-        
+        sw = flow['switch']
+        tid = flow['flow']['table_id']
+        tables = nodes[sw].get_tables()
+        tables[tid].put_flow_from_data_json(json.dumps({"flow": flow['flow']}), flow['id'])
     f.close()
     
