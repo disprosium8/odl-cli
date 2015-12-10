@@ -10,6 +10,25 @@ class col:
     ENDC = '\033[39m' # BLACK
 
 class Util():
+    def val_from_input(self, inp):
+        '''Take user input, and try to convert it to JSON appropriate
+        python values.
+        '''
+        val = inp
+        try:
+            val = int(inp)
+            return val
+        except Exception:
+            val = inp
+        if val == "false":
+            return False
+        if val == "true":
+            return True
+        if (val[0] == "'" and val[-1] == "'") or\
+                (val[0] == '"' and val[-1] == '"'):
+            return val[1:-1]
+        return val
+
     def get_string(self, disp_str, dval):
         val = raw_input(disp_str)
         if len(str(val)):

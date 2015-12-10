@@ -229,25 +229,6 @@ class ODLCmd(cmd.Cmd):
     def do_EOF(self, line):
         return True
 
-    def _val_from_input(self, inp):
-        '''Take user input, and try to convert it to JSON appropriate
-        python values.
-        '''
-        val = inp
-        try:
-            val = int(inp)
-            return val
-        except Exception:
-            val = inp
-        if val == "false":
-            return False
-        if val == "true":
-            return True
-        if (val[0] == "'" and val[-1] == "'") or\
-                (val[0] == '"' and val[-1] == '"'):
-            return val[1:-1]
-        return val
-
     def _set_cwc(self):
         '''Set the current working configuration to what it should be
         based on the cwd_list. If the path doesn't exist, set cwc to
