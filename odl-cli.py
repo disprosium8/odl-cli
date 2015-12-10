@@ -2,7 +2,7 @@
 
 '''
 Usage:
-odl-client [<url> <user> <password>]
+odl-cli [<url> <user> <password>]
 '''
 
 from odl.instance import ODLInstance
@@ -29,7 +29,7 @@ class ConfigurationError(Exception):
     
 class ODLCmd(cmd.Cmd):
     def __init__(self, url, user, pw):
-        self.prompt = col.PROMPT + "odl-client> " + col.ENDC
+        self.prompt = col.PROMPT + "odl-cli> " + col.ENDC
         self.config = {}
         self.cwc = self.config
         self.cwd_list = []
@@ -308,7 +308,7 @@ class ODLCmd(cmd.Cmd):
         return cfg
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='odl-client 0.1')
+    args = docopt(__doc__, version='odl-cli 0.1')
     url = args.get("<url>")
     if not url:
         url = "http://localhost:8181"
