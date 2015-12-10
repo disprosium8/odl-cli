@@ -1,6 +1,6 @@
 [
  {
-     "switch": "openflow:6961614077932077056",
+     "switch": "openflow:223189291260227",
      "sw_desc": "dnoc839-sw1",
      "id": "181-A-UP-ARP",
      "flow": {
@@ -22,9 +22,9 @@
                                       "vlan-id-present": true}}}},
 			 {"order": 1,
                           "output-action": {"max-length": 60,
-                                            "output-node-connector": "openflow:6961614077932077056:81"}}]},
+                                            "output-node-connector": "openflow:223189291260227:LOCAL"}}]},
 		 "order": 0}]},
-	 "match": {"in-port": "openflow:6961614077932077056:1",
+	 "match": {"in-port": "openflow:223189291260227:LOCAL",
 		   "ethernet-match": {
 		       "ethernet-type": {
 			   "type": 2054}}},
@@ -34,7 +34,7 @@
      }
  },
  {
-     "switch": "openflow:6961614077932077056",
+     "switch": "openflow:223189291260227",
      "sw_desc": "dnoc839-sw1",
      "id": "181-A-DOWN-ARP",
      "flow": {
@@ -49,11 +49,11 @@
 		 "apply-actions": {
 		     "action": [{"order": 1,
 				 "output-action": {"max-length": 60,
-                                                   "output-node-connector": "openflow:6961614077932077056:1"}},
+                                                   "output-node-connector": "openflow:223189291260227:LOCAL"}},
 				{"order": 0,
 				 "pop-vlan-action": {}}]},
 		 "order": 0}]},
-	 "match": {"in-port": "openflow:6961614077932077056:81",
+	 "match": {"in-port": "openflow:223189291260227:81",
 		   "vlan-match": {"vlan-id": {"vlan-id": 243,
                                               "vlan-id-present": true}},
 		   "ethernet-match": {
@@ -65,7 +65,7 @@
      }
  },
  {
-     "switch": "openflow:6961614077932077056",
+     "switch": "openflow:223189291260227",
      "sw_desc": "dnoc839-sw1",
      "id": "181-A-UP",
      "flow": {
@@ -87,18 +87,18 @@
                                       "vlan-id-present": true}}}},
 			 {"order": 2,
                           "output-action": {"max-length": 60,
-                                            "output-node-connector": "openflow:6961614077932077056:81"}},
+                                            "output-node-connector": "openflow:223189291260227:LOCAL"}},
 			 {"order": 0,
 			  "push-vlan-action": {"ethernet-type": 33024}}]},
                  "order": 0}]},
-	 "match": {"in-port": "openflow:6961614077932077056:1"},
+	 "match": {"in-port": "openflow:223189291260227:LOCAL"},
          "priority": 1000,
 	 "strict": true,
          "table_id": 0
      }
  },
  {
-     "switch": "openflow:6961614077932077056",
+     "switch": "openflow:223189291260227",
      "sw_desc": "dnoc839-sw1",
      "id": "181-A-DOWN",
      "flow": {
@@ -113,11 +113,11 @@
 		 "apply-actions": {
 		     "action": [{"order": 1,
 				 "output-action": {"max-length": 60,
-                                                   "output-node-connector": "openflow:6961614077932077056:1"}},
+                                                   "output-node-connector": "openflow:223189291260227:LOCAL"}},
 				{"order": 0,
 				 "pop-vlan-action": {}}]},
 		 "order": 0}]},
-	 "match": {"in-port": "openflow:6961614077932077056:81",
+	 "match": {"in-port": "openflow:223189291260227:LOCAL",
 		   "vlan-match": {"vlan-id": {"vlan-id": 243,
                                               "vlan-id-present": true}}},
 	 "priority": 1000,

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     args = docopt(__doc__, version='odl-client 0.1')
     url = args.get("<url>")
     if not url:
-        url = "http://sdn.sc15.org:8181"
+        url = "http://localhost:8181"
         
     user = args.get("<user>")
     if not user:

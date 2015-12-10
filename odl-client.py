@@ -4,19 +4,18 @@
 Usage:
 odl-client [<url> <user> <password>]
 '''
-import sys
-sys.path.append('python-odl-0.0.1')
+
 from odl.instance import ODLInstance
 from odl.topology import ODLTopology
-from odl.node import ODLNode
+from odl.node import ODLNode, ODLTable
 from docopt import docopt
 import re
 import cmd
 import json
-import uuid
 import shlex
 import pprint
 import socket
+from util import Util, col
 
 class ConfigurationError(Exception):
     def __init__(self, num, key, dir_list):
@@ -27,70 +26,6 @@ class ConfigurationError(Exception):
     def __str__(self):
         return "No such path through config at pos: %d %s in %s" %\
             (self.num, self.key, self.dir)
-
-class col:
-    HEADER = '\033[35m'# PINK
-    DIR = '\033[34m' # BLUE
-    ITEM = '\033[37m' # LGRAY
-    PROMPT = '\033[32m' # GREEN
-    WARNING = '\033[33m' # YELLOW
-    FAIL = '\033[31m' # RED
-    ENDC = '\033[39m' # BLACK
-
-class Util():
-    def get_string(self, disp_str, dval):
-        val = raw_input(disp_str)
-        if len(str(val)):
-            return str(val)
-        else:
-            return dval
-
-    def get_int(self, disp_str, dval):
-        val = raw_input(disp_str)
-        try:
-            rval = int(val)
-            return rval
-        except:
-            return dval
-
-    def get_real(self, disp_str, dval):
-        val = raw_input(disp_str)
-        try:
-            rval = float(val)
-            return rval
-        except:
-            return dval
-
-    def query_yes_no(self, question, default="no"):
-        """Ask a yes/no question via raw_input() and return their answer.
-        "question" is a string that is presented to the user.
-        "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-        
-        The "answer" return value is one of "yes" or "no".
-        """
-        valid = {"yes":True,   "y":True,  "ye":True,
-                 "no":False,     "n":False}
-        if default == None:
-            prompt = " [y/n] "
-        elif default == "yes":
-            prompt = " [Y/n] "
-        elif default == "no":
-            prompt = " [y/N] "
-        else:
-            raise ValueError("invalid default answer: '%s'" % default)
-            
-        while True:
-            sys.stdout.write(question + prompt)
-            choice = raw_input().lower()
-            if default is not None and choice == '':
-                return valid[default]
-            elif choice in valid:
-                return valid[choice]
-            else:
-                sys.stdout.write("Please respond with 'yes' or 'no' "\
-                                 "(or 'y' or 'n').\n")
     
 class ODLCmd(cmd.Cmd):
     def __init__(self, url, user, pw):
@@ -101,6 +36,7 @@ class ODLCmd(cmd.Cmd):
         self.odl = ODLInstance(url, (user, pw))
         self.util = Util()
         self.node = None
+        self.table = None
         self.pp = pprint.PrettyPrinter(indent=1, width=80, depth=None, stream=None)
         cmd.Cmd.__init__(self)
 
@@ -211,25 +147,27 @@ class ODLCmd(cmd.Cmd):
         if fid == "*":
             yn = self.util.query_yes_no("Delete ALL flows in table %s" % (table))
             if yn:
-                for x, y in self.cwc.iteritems():
-                    print "removing flow %s" % x
+                flows = self.tables[int(table)].get_config_flows()
+                for f in flows.values():
                     try:
-                        self.odl.delete_flow(self.node.id, table, x)
+                        f.delete()
                     except Exception as e:
                         print "Error deleting flow: %s" % e
-                    self.do_get_nodes(None)
             else:
                 return
         else:
             yn = self.util.query_yes_no("Delete flow %s in table %s" % (fid, table))
             if yn:
                 try:
-                    self.odl.delete_flow(self.node.id, table, fid)
+                    flows = self.tables[int(table)].get_config_flows()
+                    flows[fid].delete()
                 except Exception as e:
                     print "Error deleting flow: %s" % e
-                self.do_get_nodes(None)
             else:
                 return
+
+        self.do_update(None)
+        self.do_get_nodes(None)
 
     def complete_del_flow(self, text, l, b, e):
         return [ x[b-9:] for x,y in self.cwc.iteritems() if x.startswith(l[9:]) ]
@@ -240,10 +178,9 @@ class ODLCmd(cmd.Cmd):
             print col.FAIL + "No ODL node selected!" + col.ENDC
             return
 
-
-        file_path = self.util.get_string("File: ", None)
+        file_path = self.util.get_string("Input file: ", None)
         if not file_path:
-            print "You must include a json file containing the odl request"
+            print "You must include a json file containing the ODL flow(s)"
             return
         
         try:
@@ -260,11 +197,11 @@ class ODLCmd(cmd.Cmd):
 
         if isinstance(flow_requests, list):
             for request in flow_requests:
-                self.pp.pprint(request)
                 try:
-                    flow_id  = request["flow"]["id"]
-                    table_id = request["flow"]["table_id"]
-                    self.odl.put_flow(request, self.node.id, table_id, flow_id)
+                    flow = request["flow"]
+                    flow_id  = flow["id"]
+                    table_id = flow["table_id"]
+                    self.tables[table_id].put_flow_from_data_json(json.dumps({"flow": flow}), flow_id)
                 except ValueError, e:
                     print "Flow request did not contain flow or table id"
                     return
@@ -273,16 +210,21 @@ class ODLCmd(cmd.Cmd):
         else:
             request = flow_requests
             try:
-                flow_id  = request["flow"]["id"]
-                table_id = request["flow"]["table_id"]
-                self.odl.put_flow(request, self.node.id, table_id, flow_id)
+                flow = request["flow"]
+                flow_id  = flow["id"]
+                table_id = flow["table_id"]
+                self.tables[table_id].put_flow_from_data_json(json.dumps({"flow": flow}), flow_id)
             except ValueError, e:
                 print "Flow request did not contain flow or table id"
                 return
             except Exception, e:
                 print "Error pushing flow: %s" % e
-                
+
+        self.do_update(None)
         self.do_get_nodes(None)
+
+    def do_update(self, args):
+        self.odl.update_xml()
         
     def do_EOF(self, line):
         return True
@@ -313,7 +255,8 @@ class ODLCmd(cmd.Cmd):
         '''
         try:
             self.cwc, self.cwd_list = self._conf_for_list()
-            self.pp.pprint(self.cwc)
+            print "OK"
+            #self.pp.pprint(self.cwc)
         except ConfigurationError:
             self.cwc = self.config
             self.cwd_list = []
@@ -349,6 +292,8 @@ class ODLCmd(cmd.Cmd):
         if k and hasattr(cfg, "to_dict"):
             if isinstance(cfg, ODLNode):
                 self.node = cfg
+                self.conns = cfg.get_connectors()
+                self.tables = cfg.get_tables()
             cfg = cfg.to_dict()[k]
 
         if isinstance(cfg, list):
@@ -366,7 +311,7 @@ if __name__ == '__main__':
     args = docopt(__doc__, version='odl-client 0.1')
     url = args.get("<url>")
     if not url:
-        url = "http://sdn.sc15.org:8181"
+        url = "http://localhost:8181"
 
     user = args.get("<user>")
     if not user:
