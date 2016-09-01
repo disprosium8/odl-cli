@@ -288,7 +288,7 @@ class ODLCmd(cmd.Cmd):
             cfg = new
         return cfg
 
-if __name__ == '__main__':
+def main(args=None):
     args = docopt(__doc__, version='odl-cli 0.1')
     url = args.get("<url>")
     if not url:
@@ -310,3 +310,7 @@ Passwd: %s\n""" % (url, user, "*****" if pw != "admin" else pw)
     
     odlc = ODLCmd(url, user, pw)
     odlc.cmdloop()
+    
+if __name__ == '__main__':
+    main()
+    

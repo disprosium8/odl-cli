@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 # =============================================================================
-#  High Performance ParalleX Library (libhpx)
+#  ODL-CLI
 #
-#  Copyright (c) 2013-2015, Trustees of Indiana University,
+#  Copyright (c) 2013-2016, Trustees of Indiana University,
 #  All rights reserved.
 #
 #  This software may be modified and distributed under the terms of the BSD
@@ -18,9 +18,9 @@ from setuptools import setup
 version = "0.1"
 
 setup(
-    name="odl-cli",
+    name="odlcli",
     version=version,
-    packages=[],
+    packages=["odlcli"],
     package_data={},
     author="Ezra Kissel",
     author_email="ezkissel@indiana.edu",
@@ -39,8 +39,7 @@ setup(
         ],
     entry_points = {
         'console_scripts': [
-            'blippd = blipp.blippd:main',
-            'blippcmd = scripts.blippcmd:main'
+            'odl-cli = odlcli.odl_cli:main',
             ]
         }
     )
